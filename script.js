@@ -1,34 +1,83 @@
 // 1. 초기화 및 상태 감지
-document.addEventListener('DOMContentLoaded', () => {
-    renderPosts();
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // 초기 세션 확인
+        const { data: { session }, error } = await _supabase.auth.getSession();
+        if (error) {
+            console.error('세션 확인 에러:', error);
+        }
+
+        // UI 초기화
+        updateAuthUI(session);
+
+        // 게시물 렌더링
+        await renderPosts();
+    } catch (error) {
+        console.error('초기화 에러:', error);
+        alert('앱 초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+    }
 });
 
+// 인증 상태 변경 감지
 _supabase.auth.onAuthStateChange((event, session) => {
+    console.log('인증 상태 변경:', event, session ? '로그인됨' : '로그아웃됨');
+    updateAuthUI(session);
+
+    if (event === 'SIGNED_IN') {
+        console.log('사용자 로그인 성공');
+    } else if (event === 'SIGNED_OUT') {
+        console.log('사용자 로그아웃');
+    }
+});
+
+// UI 업데이트 함수
+function updateAuthUI(session) {
     const loginBtn = document.getElementById('btn-login');
     const userInfo = document.getElementById('user-info');
     const userEmail = document.getElementById('user-email');
 
-    if (session) {
+    if (session && session.user) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (userInfo) userInfo.style.display = 'block';
-        if (userEmail) userEmail.innerText = session.user.email;
+        if (userEmail) userEmail.innerText = session.user.email || '이메일 정보 없음';
     } else {
         if (loginBtn) loginBtn.style.display = 'block';
         if (userInfo) userInfo.style.display = 'none';
     }
-});
+}
 
 // 2. 인증 관련 함수
 async function signInWithGoogle() {
-    const { error } = await _supabase.auth.signInWithOAuth({
+    const { data, error } = await _supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+            redirectTo: window.location.origin,
+            scopes: 'email profile'
+        }
     });
-    if (error) alert('로그인 에러: ' + error.message);
+
+    if (error) {
+        console.error('OAuth 로그인 에러:', error);
+        alert('구글 로그인 실패: ' + error.message);
+    } else {
+        console.log('OAuth 로그인 성공:', data);
+    }
 }
 
 async function signOut() {
-    await _supabase.auth.signOut();
-    window.location.reload();
+    try {
+        const { error } = await _supabase.auth.signOut();
+        if (error) {
+            console.error('로그아웃 에러:', error);
+            alert('로그아웃 중 오류가 발생했습니다: ' + error.message);
+        } else {
+            console.log('로그아웃 성공');
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('로그아웃 처리 중 예외 발생:', error);
+        alert('로그아웃 처리 중 오류가 발생했습니다.');
+    }
 }
 
 // 3. 게시물 관련 함수 (Supabase)
