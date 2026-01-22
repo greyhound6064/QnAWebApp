@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>심플 커뮤니티</title>
     <link rel="stylesheet" href="style.css">
-
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div id="auth-section" style="text-align: right; padding: 10px;">
-        <button id="btn-login" onclick="signInWithGoogle()">구글 로그인</button>
+    <div id="auth-section">
+        <button type="button" id="btn-login" onclick="signInWithGoogle()">🔐 구글 로그인</button>
         <div id="user-info" style="display:none;">
             <span id="user-email"></span>
-            <button onclick="signOut()">로그아웃</button>
+            <button type="button" onclick="signOut()">로그아웃</button>
         </div>
     </div>
     <div class="container">
@@ -21,8 +21,8 @@
         
         <div class="post-form">
             <input type="text" id="post-title" placeholder="제목을 입력하세요">
-            <textarea id="post-content" placeholder="내용을 입력하세요" rows="4"></textarea>
-            <button onclick="addPost()">게시물 업로드</button>
+            <textarea id="post-content" placeholder="내용을 입력하세요" rows="5"></textarea>
+            <button type="button" onclick="addPost()">📝 게시물 업로드</button>
         </div>
 
         <hr>
