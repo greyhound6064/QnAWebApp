@@ -3,7 +3,7 @@ import http.server
 import socketserver
 import os
 
-# 현재 디렉토리로 변경
+# 현재 디렉토리로 변경 (스크립트 파일의 디렉토리)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(current_dir)
 

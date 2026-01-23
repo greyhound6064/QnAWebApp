@@ -5,31 +5,217 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>심플 커뮤니티</title>
     <link rel="stylesheet" href="style.css">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div id="auth-section">
-        <button type="button" id="btn-login" onclick="signInWithGoogle()">🔐 구글 로그인</button>
-        <div id="user-info" style="display:none;">
-            <span id="user-email"></span>
-            <button type="button" onclick="signOut()">로그아웃</button>
-        </div>
-    </div>
-    <div class="container">
-        <h1>커뮤니티 게시판</h1>
-        
-        <div class="post-form">
-            <input type="text" id="post-title" placeholder="제목을 입력하세요">
-            <textarea id="post-content" placeholder="내용을 입력하세요" rows="5"></textarea>
-            <button type="button" onclick="addPost()">📝 게시물 업로드</button>
-        </div>
-
-        <hr>
-
-        <div id="post-list">
+    <div class="main-layout">
+        <div class="sidebar">
+            <div id="auth-section">
+                <button type="button" id="btn-login">🔐 구글 로그인</button>
+                <div id="user-info" style="display:none;">
+                    <!-- <span id="user-email"></span> -->
+                </div>
             </div>
+            <nav class="tabs">
+                <button class="tab-button active" data-tab="profile">프로필</button>
+                <button class="tab-button" data-tab="feed">피드</button>
+                <button class="tab-button" data-tab="community">커뮤니티</button>
+            </nav>
+        </div>
+
+        <div class="content-area">
+            <h1 id="current-tab-title" style="display:none;">프로필</h1>
+
+            <div id="profile-tab-content" class="tab-content active" style="display:block;">
+                <div class="profile-container">
+                    <!-- 프로필 헤더 -->
+                    <div class="profile-header">
+                        <div class="profile-avatar-container">
+                            <div class="profile-avatar" id="profile-avatar">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="profile-info">
+                            <div class="profile-username-row">
+                                <h2 class="profile-username" id="profile-username">사용자명</h2>
+                                <button class="profile-edit-btn" onclick="openProfileEditModal()">프로필 편집</button>
+                                <button class="profile-settings-btn">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m16.364-8.364l-4.243 4.243m0 4.242l4.243 4.243M4.636 4.636l4.243 4.243m0 4.242l-4.243 4.243"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="profile-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number" id="stat-posts">0</span>
+                                    <span class="stat-label">게시물</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="stat-followers">0</span>
+                                    <span class="stat-label">팔로워</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number" id="stat-following">0</span>
+                                    <span class="stat-label">팔로우</span>
+                                </div>
+                            </div>
+                            <div class="profile-bio" id="profile-bio">소개글이 여기에 표시됩니다.</div>
+                        </div>
+                    </div>
+
+                    <!-- 액션 버튼 -->
+                    <div class="profile-actions">
+                        <button class="action-btn primary" onclick="openProfileEditModal()">프로필 편집</button>
+                        <button class="action-btn secondary">보관된 스토리 보기</button>
+                        <button class="action-btn logout" id="profile-logout-btn" onclick="handleProfileLogout()">로그아웃</button>
+                    </div>
+
+                    <!-- 스토리 하이라이트 -->
+                    <div class="story-highlights">
+                        <div class="story-item new-story">
+                            <div class="story-circle">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </div>
+                            <span class="story-label">신규</span>
+                        </div>
+                    </div>
+
+                    <!-- 콘텐츠 탭 -->
+                    <div class="profile-tabs">
+                        <button class="profile-tab active" data-profile-tab="posts">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </button>
+                        <button class="profile-tab" data-profile-tab="saved">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </button>
+                        <button class="profile-tab" data-profile-tab="tagged">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- 콘텐츠 영역 -->
+                    <div class="profile-content">
+                        <div id="profile-posts-content" class="profile-tab-content active">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                </div>
+                                <h3>사진 공유</h3>
+                                <p>사진을 공유하면 회원님의 프로필에 표시됩니다.</p>
+                                <button class="empty-action-btn">첫 사진 공유하기</button>
+                            </div>
+                        </div>
+                        <div id="profile-saved-content" class="profile-tab-content" style="display:none;">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                </div>
+                                <h3>저장된 게시물 없음</h3>
+                                <p>나중에 다시 보고 싶은 게시물을 저장하세요.</p>
+                            </div>
+                        </div>
+                        <div id="profile-tagged-content" class="profile-tab-content" style="display:none;">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                    </svg>
+                                </div>
+                                <h3>태그된 사진 없음</h3>
+                                <p>사람들이 회원님을 사진에 태그하면 여기에 표시됩니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="feed-tab-content" class="tab-content" style="display:none;">
+                <!-- 피드 탭 빈 페이지 -->
+            </div>
+
+            <div id="community-tab-content" class="tab-content" style="display:none;">
+                <div class="post-form">
+                    <input type="text" id="post-title" placeholder="제목을 입력하세요">
+                    <textarea id="post-content-input" placeholder="내용을 입력하세요" rows="5"></textarea>
+                    <button type="button" onclick="addPost()">📝 게시물 업로드</button>
+                </div>
+                <hr>
+                <div id="post-list">
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- 프로필 편집 모달 -->
+    <div id="profile-edit-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>프로필 편집</h2>
+                <button class="modal-close" onclick="closeProfileEditModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-avatar-section">
+                    <div class="edit-avatar-preview" id="edit-avatar-preview">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="edit-avatar-actions">
+                        <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarChange(event)">
+                        <button class="avatar-change-btn" onclick="document.getElementById('avatar-upload').click()">사진 변경</button>
+                        <button class="avatar-remove-btn" onclick="removeAvatar()">현재 사진 삭제</button>
+                    </div>
+                </div>
+                <div class="edit-form-group">
+                    <label for="edit-nickname">닉네임</label>
+                    <input type="text" id="edit-nickname" placeholder="닉네임을 입력하세요" maxlength="30">
+                    <small class="form-hint">최대 30자까지 입력 가능합니다.</small>
+                </div>
+                <div class="edit-form-group">
+                    <label for="edit-bio">소개</label>
+                    <textarea id="edit-bio" placeholder="자신을 소개하는 글을 작성하세요" maxlength="150" rows="3"></textarea>
+                    <small class="form-hint">최대 150자까지 입력 가능합니다.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeProfileEditModal()">취소</button>
+                <button class="modal-btn save" onclick="saveProfileChanges()">저장</button>
+            </div>
+        </div>
+    </div>
+    
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
 </body>

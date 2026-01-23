@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS comments (
     post_id BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     author_email TEXT NOT NULL,
+    user_id UUID NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -49,9 +50,12 @@ DROP POLICY IF EXISTS "Authenticated users can create comments" ON comments;
 CREATE POLICY "Authenticated users can create comments" ON comments FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Users can delete comments" ON comments;
-CREATE POLICY "Users can delete comments" ON comments FOR DELETE USING (true);
+CREATE POLICY "Users can delete comments" ON comments FOR DELETE USING (auth.uid() = user_id);
 
--- 6. updated_at 자동 갱신 트리거
+-- 6. author_email 컬럼 추가 (없으면)
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS author_email TEXT;
+
+-- 7. updated_at 자동 갱신 트리거
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
